@@ -1,41 +1,34 @@
 package com.espirit.moddev.serverrunner;
 
 
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Singular;
 import org.hamcrest.Matcher;
 import org.hamcrest.StringDescription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.CodeSource;
 import java.time.Duration;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import lombok.Builder;
-import lombok.Getter;
-import lombok.Singular;
-
-import static org.hamcrest.Matchers.allOf;
-import static org.hamcrest.Matchers.greaterThan;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.lessThanOrEqualTo;
-import static org.hamcrest.Matchers.matchesPattern;
-import static org.hamcrest.Matchers.notNullValue;
+import static org.hamcrest.Matchers.*;
 
 @Getter
 public class ServerProperties {
+    private static Logger LOGGER = LoggerFactory.getLogger(ServerProperties.class);
 
     public enum ConnectionMode {
         HTTP_MODE(8000);
@@ -198,5 +191,84 @@ public class ServerProperties {
             throw new IllegalStateException(
                 "When the system classloader is not an UrlClassLoader, you need to manually specify the FirstSpirit jars.");
         }
+    }
+
+    /**
+     * Tries to get the FirstSpirit server jar and wrapper jar from the classpath.
+     * @return a list with one or two jar files or an empty list, if none of them can be found
+     */
+    public static List<File> getFirstSpiritJarsFromClasspath() {
+        List result = new ArrayList();
+        getServerJarFileFromClasspath().ifPresent(result::add);
+        getWrapperJarFileFromClasspath().ifPresent(result::add);
+        getAccessJarFileFromClasspath().ifPresent(result::add);
+        return result;
+    }
+
+    /**
+     * Optionally gets the jar file of the FirstSpirit server, if the CMSServer class can be loaded
+     * with the current classpath.
+     * @return the server jar file or an empty {@link Optional}
+     */
+    public static Optional<File> getServerJarFileFromClasspath() {
+        try {
+            File jarFile = getJarFileForClass("de.espirit.firstspirit.server.CMSServer");
+            LOGGER.info("FirstSpirit server jar found in classpath: " + jarFile.getPath());
+            return Optional.of(jarFile);
+        } catch (ClassNotFoundException e) {
+            LOGGER.info("FirstSpirit CMSServer class not found! Is the server jar file on the classpath?", e);
+        } catch (URISyntaxException e) {
+            LOGGER.info("FirstSpirit server jar location couldn't be translated to an URI!", e);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Optionally returns the jar file of the FirstSpirit wrapper, if the WrapperManager class can be
+     * loaded with the current classpath.
+     * @return the wrapper jar file or an empty {@link Optional}
+     */
+    public static Optional<File> getWrapperJarFileFromClasspath() {
+        try {
+            File jarFile = getJarFileForClass("org.tanukisoftware.wrapper.WrapperManager");
+            LOGGER.info("FirstSpirit server jar found in classpath: " + jarFile.getPath());
+            return Optional.of(jarFile);
+        } catch (ClassNotFoundException e) {
+            LOGGER.info("WrapperManager class not found! Is the wrapper jar file on the classpath?", e);
+        } catch (URISyntaxException e) {
+            LOGGER.info("FirstSpirit wrapper jar location couldn't be translated to an URI!", e);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Optionally returns the jar file of the FirstSpirit access API, if the ShutdownServer class can be
+     * loaded with the current classpath.
+     * @return the access jar file or an empty {@link Optional}
+     */
+    public static Optional<File> getAccessJarFileFromClasspath() {
+        try {
+            File jarFile = getJarFileForClass("de.espirit.firstspirit.server.ShutdownServer");
+            LOGGER.info("FirstSpirit access jar found in classpath: " + jarFile.getPath());
+            return Optional.of(jarFile);
+        } catch (ClassNotFoundException e) {
+            LOGGER.info("ShutdownServer class not found! Is the access jar file on the classpath?", e);
+        } catch (URISyntaxException e) {
+            LOGGER.info("FirstSpirit access jar location couldn't be translated to an URI!", e);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Tries to get the jar file of the class with the given fullQualifiedClassName string.
+     * @param fullQualifiedClassName the name of the class the jar file should be located for
+     * @return the corresponding jar file
+     * @throws ClassNotFoundException if the given class couldn't be found
+     * @throws URISyntaxException if the location of the class can not be converted to an URI
+     */
+    private static File getJarFileForClass(String fullQualifiedClassName) throws ClassNotFoundException, URISyntaxException {
+        Class<?> serverClass = Class.forName(fullQualifiedClassName);
+        CodeSource serverCodeSource = serverClass.getProtectionDomain().getCodeSource();
+        return new File(serverCodeSource.getLocation().toURI().getPath());
     }
 }

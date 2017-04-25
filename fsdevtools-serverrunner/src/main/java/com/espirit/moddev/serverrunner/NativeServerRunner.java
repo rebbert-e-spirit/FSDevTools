@@ -226,6 +226,7 @@ public class NativeServerRunner implements ServerRunner {
     private static boolean stopFirstSpiritServer(final ServerProperties serverProperties, final Optional<FutureTask<Void>> serverTask) {
         final ProcessBuilder builder = new ProcessBuilder(prepareStop(serverProperties));
         builder.redirectErrorStream(true);
+        log.info("Stopping FirstSpirit Server...");
         try {
             final Process process = builder.start();
             new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8)).lines()
