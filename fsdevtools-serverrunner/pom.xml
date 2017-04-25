@@ -210,21 +210,25 @@
             <build>
                 <plugins>
                     <plugin>
-                        <groupId>org.scalatest</groupId>
                         <artifactId>scalatest-maven-plugin</artifactId>
+                        <groupId>org.scalatest</groupId>
                         <version>1.0</version>
+                        <configuration>
+                            <reportsDirectory>${project.build.directory}/failsafe-reports</reportsDirectory>
+                            <junitxml>.</junitxml>
+                            <filereports>WDF TestSuite.txt</filereports>
+                            <tagsToInclude>IntegrationTest</tagsToInclude>
+                            <systemProperties>
+                                <fsServerRoot>${fsServerRoot}</fsServerRoot>
+                            </systemProperties>
+                        </configuration>
                         <executions>
                             <execution>
                                 <id>itest</id>
+                                <phase>integration-test</phase>
                                 <goals>
                                     <goal>test</goal>
                                 </goals>
-                                <configuration>
-                                    <reportsDirectory>${project.build.directory}/failsafe-reports</reportsDirectory>
-                                    <junitxml>.</junitxml>
-                                    <filereports>WDF TestSuite.txt</filereports>
-                                    <tagsToInclude>IntegrationTest</tagsToInclude>
-                                </configuration>
                             </execution>
                         </executions>
                     </plugin>

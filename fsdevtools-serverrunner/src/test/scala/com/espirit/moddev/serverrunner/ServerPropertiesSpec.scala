@@ -27,7 +27,7 @@ class ServerPropertiesSpec extends UnitSpec with GeneratorDrivenPropertyChecks w
   }
   "ServerProperties constructor, parameter serverInstall" should "use a default parameter if given null" in {
     noException should be thrownBy
-      new ServerProperties(Paths.get(""), null, 1, true, true, new util.ArrayList(), Duration.ofMillis(0), "", 0, fakeJars, null).isServerInstall
+      new ServerProperties(Paths.get(""), null, 1, true, null, new util.ArrayList(), Duration.ofMillis(0), "", 0, fakeJars, null).isServerInstall
   }
 
   def objWithPort(port: Int) =
