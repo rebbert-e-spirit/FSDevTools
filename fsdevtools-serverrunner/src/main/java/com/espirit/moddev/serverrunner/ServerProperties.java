@@ -28,7 +28,7 @@ import static org.hamcrest.Matchers.*;
 
 @Getter
 public class ServerProperties {
-    private static Logger LOGGER = LoggerFactory.getLogger(ServerProperties.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServerProperties.class);
 
     public enum ConnectionMode {
         HTTP_MODE(8000);

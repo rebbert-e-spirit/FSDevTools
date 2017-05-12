@@ -164,7 +164,7 @@ public class ServerStartCommand extends AbstractServerCommand implements com.esp
     }
 
     private void addServerJarsFromOptionsOrClasspath(ServerPropertiesBuilder serverPropertiesBuilder) {
-        if(this.serverJar != null || this.wrapperJar != null) {
+        if(this.serverJar != null && this.wrapperJar != null) {
             serverPropertiesBuilder.firstSpiritJar(new File(this.serverJar)).firstSpiritJar(new File(this.wrapperJar));
         } else {
             List<File> jars = ServerProperties.getFirstSpiritJarsFromClasspath();
